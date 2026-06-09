@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  accountId             String @id @default(uuid())
+  personId              String
+  balance               Decimal @default(0)
+  dailyWithdrawalLimit  Decimal
+  activeFlag            Boolean @default(true)
+  accountType           AccountType
+  createDate            DateTime @default(now())
+  transactions          Transaction[]
+}
+
+model Transaction {
+  transactionId   String @id @default(uuid())
+  accountId       String
+  account         Account @relation(fields: [accountId], references: [accountId])
+  value           Decimal
+  type            TransactionType
+  transactionDate DateTime @default(now())
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
