@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AccountType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   CHECKING,
   MIN_DAILY_LIMIT,
@@ -9,19 +10,10 @@ import {
   MOCK_ACCOUNT_ID,
   MOCK_PERSON_ID,
   NEW_DAILY_LIMIT,
+  prismaMock,
   SAVINGS,
-} from '../../../test/consts';
-import { PrismaService } from '../../prisma/prisma.service';
+} from '../../test/consts';
 import { AccountsService } from '../accounts.service';
-
-const prismaMock = {
-  account: {
-    create: jest.fn(),
-    findMany: jest.fn(),
-    findUnique: jest.fn(),
-    update: jest.fn(),
-  },
-};
 
 describe('AccountsService', () => {
   let service: AccountsService;
@@ -68,9 +60,10 @@ describe('AccountsService', () => {
       expect(result).toHaveLength(accounts.length);
     });
 
-    it('when person has no accounts should throw NotFoundException', async () => {
+    it('when person has no accounts should return empty array', async () => {
       prismaMock.account.findMany.mockResolvedValue([]);
-      await expect(service.getAllAccounts(MOCK_PERSON_ID)).rejects.toThrow(NotFoundException);
+      const result = await service.getAllAccounts(MOCK_PERSON_ID);
+      expect(result).toEqual([]);
     });
   });
 

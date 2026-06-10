@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Account } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { accountTypeMap } from './consts';
 import { CreateAccountDto } from './dtos/create-account.dto';
@@ -7,7 +8,7 @@ import { CreateAccountDto } from './dtos/create-account.dto';
 export class AccountsService {
   constructor(private prismaService: PrismaService) {}
 
-  async createAccount(dto: CreateAccountDto) {
+  async createAccount(dto: CreateAccountDto): Promise<Account> {
     return await this.prismaService.account.create({
       data: {
         personId: dto.personId,
@@ -17,19 +18,11 @@ export class AccountsService {
     });
   }
 
-  async getAllAccounts(personId: string) {
-    const accounts = await this.prismaService.account.findMany({
-      where: { personId },
-    });
-
-    if (!accounts || accounts.length === 0) {
-      throw new NotFoundException(`No accounts found for person id: ${personId}`);
-    }
-
-    return accounts;
+  async getAllAccounts(personId: string): Promise<Account[]> {
+    return this.prismaService.account.findMany({ where: { personId } });
   }
 
-  async getAccountById(accountId: string) {
+  async getAccountById(accountId: string): Promise<Account> {
     const account = await this.prismaService.account.findUnique({
       where: { accountId },
     });
@@ -41,7 +34,7 @@ export class AccountsService {
     return account;
   }
 
-  async setActive(accountId: string, isActive: boolean) {
+  async setActive(accountId: string, isActive: boolean): Promise<Account> {
     await this.getAccountById(accountId);
 
     return await this.prismaService.account.update({
@@ -50,7 +43,7 @@ export class AccountsService {
     });
   }
 
-  async setDailyWithdrawalLimit(accountId: string, limit: number) {
+  async setDailyWithdrawalLimit(accountId: string, limit: number): Promise<Account> {
     await this.getAccountById(accountId);
 
     return await this.prismaService.account.update({

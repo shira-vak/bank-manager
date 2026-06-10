@@ -28,3 +28,31 @@ export const MOCK_ACCOUNT = {
   accountType: AccountType.CHECKING,
   createDate: new Date('2024-01-01'),
 };
+
+export const MOCK_ACCOUNT_RESPONSE = {
+  accountId: MOCK_ACCOUNT_ID,
+  personId: MOCK_PERSON_ID,
+  balance: INITIAL_BALANCE,
+  dailyWithdrawalLimit: DAILY_LIMIT,
+  activeFlag: true,
+  accountType: AccountType.CHECKING,
+  createDate: new Date('2024-01-01').toISOString(),
+};
+
+const txClient = {
+  account: { update: jest.fn() },
+  transaction: { create: jest.fn() },
+};
+
+export const prismaMock = {
+  account: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
+  transaction: { create: jest.fn(), findMany: jest.fn() },
+  // Executes the callback with a transaction-scoped client mock
+  $transaction: jest.fn((cb: (tx: typeof txClient) => Promise<unknown>) => cb(txClient)),
+  _txClient: txClient,
+};
