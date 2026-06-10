@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiParam } from '@nestjs/swagger';
 import { AccountsService } from './accounts.service';
+import { AccountIdDto } from './dtos/account-id.dto';
 import { CreateAccountDto } from './dtos/create-account.dto';
 import { SetActiveDto } from './dtos/set-active.dto';
 import { SetDailyWithdrawalLimitDto } from './dtos/set-daily-withdrawal-limit.dto';
-import { AccountIdDto } from './dtos/account-id.dto';
 
 @Controller('accounts')
 export class AccountsController {
@@ -31,6 +31,7 @@ export class AccountsController {
   }
 
   @Post(':accountId/active')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Set account active/inactive' })
   @ApiParam({ name: 'accountId' })
   async setActive(@Param() params: AccountIdDto, @Body() body: SetActiveDto) {
@@ -38,6 +39,7 @@ export class AccountsController {
   }
 
   @Post(':accountId/set-daily-withdrawal')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Set the daily withdrawal limit' })
   @ApiParam({ name: 'accountId' })
   async setDailyWithdrawalLimit(@Param() params: AccountIdDto, @Body() body: SetDailyWithdrawalLimitDto) {
