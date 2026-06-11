@@ -2,6 +2,7 @@ import { INestApplication, NotFoundException, ValidationPipe } from '@nestjs/com
 import { Test } from '@nestjs/testing';
 import { AccountType } from '@prisma/client';
 import request from 'supertest';
+import { DecimalTransformInterceptor } from '../../common/decimal-transform.interceptor';
 import {
   CHECKING,
   DAILY_LIMIT,
@@ -12,7 +13,7 @@ import {
   MOCK_ACCOUNT_RESPONSE,
   MOCK_PERSON_ID,
   NEW_DAILY_LIMIT,
-  SAVINGS
+  SAVINGS,
 } from '../../test/consts';
 import { AccountsController } from '../accounts.controller';
 import { AccountsService } from '../accounts.service';
@@ -36,6 +37,7 @@ describe('AccountsController', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.useGlobalInterceptors(new DecimalTransformInterceptor());
     await app.init();
   });
 

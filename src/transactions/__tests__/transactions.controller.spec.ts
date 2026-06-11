@@ -1,6 +1,7 @@
 import { BadRequestException, INestApplication, NotFoundException, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { DecimalTransformInterceptor } from '../../common/decimal-transform.interceptor';
 import {
   DEPOSIT_AMOUNT,
   INITIAL_BALANCE,
@@ -29,6 +30,7 @@ describe('TransactionsController', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.useGlobalInterceptors(new DecimalTransformInterceptor());
     await app.init();
   });
 
