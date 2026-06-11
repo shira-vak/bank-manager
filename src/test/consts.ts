@@ -39,20 +39,18 @@ export const MOCK_ACCOUNT_RESPONSE = {
   createDate: new Date('2024-01-01').toISOString(),
 };
 
-const txClient = {
-  account: { update: jest.fn() },
-  transaction: { create: jest.fn() },
-};
-
-export const prismaMock = {
+const prismaClient = {
   account: {
     create: jest.fn(),
     findMany: jest.fn(),
     findUnique: jest.fn(),
     update: jest.fn(),
   },
-  transaction: { create: jest.fn(), findMany: jest.fn() },
-  // Executes the callback with a transaction-scoped client mock
-  $transaction: jest.fn((cb: (tx: typeof txClient) => Promise<unknown>) => cb(txClient)),
-  _txClient: txClient,
+  transaction: { create: jest.fn(), findMany: jest.fn(), aggregate: jest.fn() },
+};
+
+export const prismaMock = {
+  ...prismaClient,
+  $transaction: jest.fn((cb: (prisma: typeof prismaClient) => Promise<unknown>) => cb(prismaClient)),
+  _prismaClient: prismaClient,
 };

@@ -38,13 +38,13 @@ describe('TransactionsService', () => {
     it('when account is active should deposit and record transaction', async () => {
       const balanceAfter = new Decimal(INITIAL_BALANCE + DEPOSIT_AMOUNT);
       accountsServiceMock.getAccountById.mockResolvedValue(MOCK_ACCOUNT);
-      prismaMock._txClient.account.update.mockResolvedValue({ ...MOCK_ACCOUNT, balance: balanceAfter });
-      prismaMock._txClient.transaction.create.mockResolvedValue({});
+      prismaMock._prismaClient.account.update.mockResolvedValue({ ...MOCK_ACCOUNT, balance: balanceAfter });
+      prismaMock._prismaClient.transaction.create.mockResolvedValue({});
 
       const result = await service.deposit(MOCK_ACCOUNT_ID, DEPOSIT_AMOUNT);
 
       expect(result.balance.toString()).toBe(balanceAfter.toString());
-      expect(prismaMock._txClient.transaction.create).toHaveBeenCalledWith({
+      expect(prismaMock._prismaClient.transaction.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ type: 'DEPOSIT', accountId: MOCK_ACCOUNT_ID }),
       });
     });
@@ -64,34 +64,30 @@ describe('TransactionsService', () => {
     it('when balance and limit valid should withdraw from account', async () => {
       const balanceAfter = new Decimal(INITIAL_BALANCE - WITHDRAW_AMOUNT);
       accountsServiceMock.getAccountById.mockResolvedValue(MOCK_ACCOUNT);
-      prismaMock.transaction.findMany.mockResolvedValue([]);
-      prismaMock._txClient.account.update.mockResolvedValue({ ...MOCK_ACCOUNT, balance: balanceAfter });
-      prismaMock._txClient.transaction.create.mockResolvedValue({});
+      prismaMock.transaction.aggregate.mockResolvedValue({ _sum: { value: null } });
+      prismaMock._prismaClient.account.update.mockResolvedValue({ ...MOCK_ACCOUNT, balance: balanceAfter });
+      prismaMock._prismaClient.transaction.create.mockResolvedValue({});
 
       const result = await service.withdraw(MOCK_ACCOUNT_ID, WITHDRAW_AMOUNT);
 
       expect(result.balance.toString()).toBe(balanceAfter.toString());
-      expect(prismaMock.transaction.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ accountId: MOCK_ACCOUNT_ID }),
-        }),
-      );
-      expect(prismaMock._txClient.transaction.create).toHaveBeenCalledWith({
+      expect(prismaMock._prismaClient.transaction.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ type: 'WITHDRAWAL', accountId: MOCK_ACCOUNT_ID }),
       });
     });
 
     it('when prior withdrawals today exceed daily limit should throw BadRequestException', async () => {
-      const priorWithdrawal = { type: 'WITHDRAWAL', value: new Decimal(DAILY_LIMIT - WITHDRAW_AMOUNT + 1) };
       accountsServiceMock.getAccountById.mockResolvedValue(MOCK_ACCOUNT);
-      prismaMock.transaction.findMany.mockResolvedValue([priorWithdrawal]);
+      prismaMock.transaction.aggregate.mockResolvedValue({
+        _sum: { value: new Decimal(DAILY_LIMIT - WITHDRAW_AMOUNT + 1) },
+      });
 
       await expect(service.withdraw(MOCK_ACCOUNT_ID, WITHDRAW_AMOUNT)).rejects.toThrow(BadRequestException);
     });
 
     it('when current amount exceeds daily limit should throw BadRequestException', async () => {
       accountsServiceMock.getAccountById.mockResolvedValue({ ...MOCK_ACCOUNT, dailyWithdrawalLimit: new Decimal(0) });
-      prismaMock.transaction.findMany.mockResolvedValue([]);
+      prismaMock.transaction.aggregate.mockResolvedValue({ _sum: { value: null } });
 
       await expect(service.withdraw(MOCK_ACCOUNT_ID, WITHDRAW_AMOUNT)).rejects.toThrow(BadRequestException);
     });
@@ -104,7 +100,7 @@ describe('TransactionsService', () => {
       ],
     ])('when %s should throw BadRequestException', async (_label, overrides) => {
       accountsServiceMock.getAccountById.mockResolvedValue({ ...MOCK_ACCOUNT, ...overrides });
-      prismaMock.transaction.findMany.mockResolvedValue([]);
+      prismaMock.transaction.aggregate.mockResolvedValue({ _sum: { value: null } });
       await expect(service.withdraw(MOCK_ACCOUNT_ID, WITHDRAW_AMOUNT)).rejects.toThrow(BadRequestException);
     });
 
@@ -116,24 +112,17 @@ describe('TransactionsService', () => {
 
   describe('getTodayWithdrawnAmount', () => {
     it('when there are withdrawals today should return their sum ignoring deposits', async () => {
-      const firstWithdraw = 100;
-      const secondWithdraw = 50;
       accountsServiceMock.getAccountById.mockResolvedValue(MOCK_ACCOUNT);
-      
-      prismaMock.transaction.findMany.mockResolvedValue([
-        { type: 'WITHDRAWAL', value: new Decimal(firstWithdraw) },
-        { type: 'WITHDRAWAL', value: new Decimal(secondWithdraw) },
-        { type: 'DEPOSIT', value: new Decimal(9999) },
-      ]);
+      prismaMock.transaction.aggregate.mockResolvedValue({ _sum: { value: new Decimal(150) } });
 
       const result = await service.getTodayWithdrawnAmount(MOCK_ACCOUNT_ID);
 
-      expect(result).toBe(firstWithdraw + secondWithdraw);
+      expect(result).toBe(150);
     });
 
     it('when there are no transactions today should return 0', async () => {
       accountsServiceMock.getAccountById.mockResolvedValue(MOCK_ACCOUNT);
-      prismaMock.transaction.findMany.mockResolvedValue([]);
+      prismaMock.transaction.aggregate.mockResolvedValue({ _sum: { value: null } });
 
       const result = await service.getTodayWithdrawnAmount(MOCK_ACCOUNT_ID);
 
@@ -188,6 +177,13 @@ describe('TransactionsService', () => {
       const result = await service.getTransactionsByPeriod(MOCK_ACCOUNT_ID, startDate, endDate);
 
       expect(result).toHaveLength(0);
+    });
+
+    it('when startDate is not before endDate should throw BadRequestException', async () => {
+      accountsServiceMock.getAccountById.mockResolvedValue(MOCK_ACCOUNT);
+      await expect(service.getTransactionsByPeriod(MOCK_ACCOUNT_ID, endDate, startDate)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('when account does not exist should throw NotFoundException', async () => {

@@ -19,9 +19,7 @@ describe('PrismaService.onModuleInit', () => {
   });
 
   it('when DB is down then recovers should retry and eventually connect', async () => {
-    jest.spyOn(service, '$connect')
-      .mockRejectedValueOnce(new Error('connection refused'))
-      .mockResolvedValue();
+    jest.spyOn(service, '$connect').mockRejectedValueOnce(new Error('connection refused')).mockResolvedValue();
 
     await service.onModuleInit();
 

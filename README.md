@@ -12,7 +12,7 @@ A REST api banking backend built with NestJS, Prisma ORM, and PostgreSQL. Suppor
 ### 1. Install dependencies
 
 ```bash
-npm install
+npm i
 ```
 
 ### 2. Start PostgreSQL
@@ -50,7 +50,7 @@ npm run build && npm run start:prod
 ```
 
 The API is available at `http://localhost:3000`.  
-Swagger docs: `http://localhost:3000/api`
+Swagger: `http://localhost:3000/api`
 
 ---
 
@@ -67,12 +67,9 @@ npm run test:watch
 npm run test:cov
 ```
 
-Tests are unit/integration tests using Jest with mocked dependencies — no running database required.
-
-
 ## Business Rules
 
 - Withdrawals require the account to be **active**.
 - Withdrawals require sufficient **balance**.
 - Withdrawals are capped by the **daily withdrawal limit** which updates after every Withdrawal.
-- Deposits and withdrawals are **atomic** — balance update and transaction record are committed together or not at all.
+- Deposits and withdrawals are **atomic** balance update and transaction record are committed together or not at all.

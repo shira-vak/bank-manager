@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { AccountIdDto } from 'src/accounts/dtos/account-id.dto';
-import { StatementQueryDto } from 'src/transactions/dtos/statement-query.dto';
+import { AccountIdDto } from '../accounts/dtos/account-id.dto';
+import { StatementQueryDto } from './dtos/statement-query.dto';
 import { TransactionAmountDto } from './dtos/transaction-amount.dto';
 import { TransactionsService } from './transactions.service';
 

@@ -132,6 +132,14 @@ describe('TransactionsController', () => {
         .expect(404);
     });
 
+    it('when startDate is not before endDate should return 400', async () => {
+      serviceMock.getTransactionsByPeriod.mockRejectedValue(new BadRequestException());
+      await request(app.getHttpServer())
+        .get(`/transactions/${MOCK_ACCOUNT_ID}/statement`)
+        .query({ startDate: END, endDate: START })
+        .expect(400);
+    });
+
     it.each([
       ['startDate is an ordinal date without separators', { startDate: '2022028', endDate: END }],
       ['startDate is a plain number', { startDate: '5', endDate: END }],
