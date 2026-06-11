@@ -9,7 +9,6 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.env
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -427,3 +426,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+/dist/
+/generated/prisma
